@@ -17,7 +17,7 @@ function App() {
     const id = Math.random().toString(36).substring(2, 10);
     setClientId(id);
 
-    const socket = new WebSocket('ws://localhost:3001');
+    const socket = new WebSocket('wss://192.168.0.144:5000');
 
     socket.addEventListener('open', () => {
       // Send register event to the server with the generated id
@@ -26,6 +26,7 @@ function App() {
 
     socket.addEventListener('message', (evt) => {
       try {
+        console.log(evt)
         const data = JSON.parse(evt.data);
         if (data.event === 'unlocked' && data.id === id) {
           setMessage('Unlocked!');
@@ -44,7 +45,7 @@ function App() {
   return (
     <div className="App">
       <div>
-      <FontAwesomeIcon icon={faLock} size='10x' inverse/>
+      <FontAwesomeIcon icon={faLock} size='9x' inverse/>
       <header className="App-header">
         <p>Client ID: {clientId}</p>
         {message && <p>{message}</p>}
