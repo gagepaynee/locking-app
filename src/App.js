@@ -43,11 +43,14 @@ function App() {
 
   return (
     <div className="App">
+      <div>
       <FontAwesomeIcon icon={faLock} size='10x' inverse/>
       <header className="App-header">
         <p>Client ID: {clientId}</p>
         {message && <p>{message}</p>}
       </header>
+      </div>
+      
     </div>
   );
 }

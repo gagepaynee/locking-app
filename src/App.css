@@ -5,6 +5,9 @@
   align-items: center;
   justify-content: center;
 }
+.App-header {
+  color: white
+}
 
 .lock-icon {
   color: white;
