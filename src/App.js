@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 
 /**
  * Connects to a WebSocket server and registers this client. When an
@@ -41,6 +43,7 @@ function App() {
 
   return (
     <div className="App">
+      <FontAwesomeIcon icon={faLock} size='10x' inverse/>
       <header className="App-header">
         <p>Client ID: {clientId}</p>
         {message && <p>{message}</p>}
