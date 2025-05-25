@@ -5,6 +5,9 @@
   align-items: center;
   justify-content: center;
 }
+.App.unlocked {
+  background-color: green;
+}
 .App-header {
   color: white
 }

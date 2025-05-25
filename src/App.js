@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
 
 /**
  * Connects to a WebSocket server and registers this client. When an
@@ -10,7 +10,7 @@ import { faLock } from '@fortawesome/free-solid-svg-icons'
  */
 function App() {
   const [clientId, setClientId] = useState('');
-  const [message, setMessage] = useState('');
+  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     // Generate a simple unique id for this client.
@@ -26,10 +26,9 @@ function App() {
 
     socket.addEventListener('message', (evt) => {
       try {
-        console.log(evt)
         const data = JSON.parse(evt.data);
         if (data.event === 'unlocked' && data.id === id) {
-          setMessage('Unlocked!');
+          setUnlocked(true);
         }
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -43,15 +42,19 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
+    <div className={`App ${unlocked ? 'unlocked' : ''}`}>
       <div>
-      <FontAwesomeIcon icon={faLock} size='9x' inverse/>
+      <FontAwesomeIcon
+        icon={unlocked ? faLockOpen : faLock}
+        size='9x'
+        inverse
+        aria-label={unlocked ? 'unlocked' : 'locked'}
+      />
       <header className="App-header">
         <p>Client ID: {clientId}</p>
-        {message && <p>{message}</p>}
       </header>
       </div>
-      
+
     </div>
   );
 }
