@@ -1,9 +1,11 @@
 import './App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 
 function App() {
   return (
     <div className="App">
-      <i className="fas fa-lock lock-icon" aria-label="locked" />
+      <FontAwesomeIcon icon={faLock} size='10x' inverse/>
     </div>
   );
 }
