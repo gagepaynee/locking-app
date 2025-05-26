@@ -14,6 +14,8 @@ function App() {
   const [unlocked, setUnlocked] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const unlockedAudioRef = useRef(new Audio(unlockedSound));
+  // Track the latest value of audioEnabled for the WebSocket callback
+  const audioEnabledRef = useRef(audioEnabled);
 
   const enableAudio = () => {
     if (unlockedAudioRef.current) {
@@ -28,6 +30,11 @@ function App() {
       setAudioEnabled(true);
     }
   };
+
+  // Keep the ref in sync with the latest audioEnabled state
+  useEffect(() => {
+    audioEnabledRef.current = audioEnabled;
+  }, [audioEnabled]);
 
   useEffect(() => {
     // Generate a simple unique id for this client.
@@ -46,7 +53,7 @@ function App() {
         const data = JSON.parse(evt.data);
         if (data.event === 'unlocked' && data.id === id) {
           setUnlocked(true);
-          if (unlockedAudioRef.current && audioEnabled) {
+          if (unlockedAudioRef.current && audioEnabledRef.current) {
             try {
               console.log('made it');
               unlockedAudioRef.current.play();
@@ -64,7 +71,7 @@ function App() {
     return () => {
       socket.close();
     };
-  }, [audioEnabled]);
+  }, []);
 
   return (
     <div className={`App ${unlocked ? 'unlocked' : ''}`}>
