@@ -1,9 +1,12 @@
 .App {
-  background-color: red;
+  background-color: #b0c4de; /* grayish blue */
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.App.registered {
+  background-color: red;
 }
 .App.unlocked {
   background-color: green;
@@ -23,4 +26,11 @@
   left: 1rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
