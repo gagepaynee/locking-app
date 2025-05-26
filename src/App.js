@@ -17,7 +17,7 @@ function App() {
     const id = Math.random().toString(36).substring(2, 10);
     setClientId(id);
 
-    const socket = new WebSocket('wss://192.168.0.144:5000');
+    const socket = new WebSocket(`wss://${process.env.REACT_APP_IP_ADDRESS}:${process.env.REACT_APP_SERVER_PORT}`);
 
     socket.addEventListener('open', () => {
       // Send register event to the server with the generated id
