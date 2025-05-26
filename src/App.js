@@ -12,7 +12,22 @@ import unlockedSound from '../media/unlocked.wav';
 function App() {
   const [clientId, setClientId] = useState('');
   const [unlocked, setUnlocked] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const unlockedAudioRef = useRef(new Audio(unlockedSound));
+
+  const enableAudio = () => {
+    if (unlockedAudioRef.current) {
+      unlockedAudioRef.current.play().then(() => {
+        unlockedAudioRef.current.pause();
+        setAudioEnabled(true);
+      }).catch(() => {
+        // Even if playback fails, we consider audio enabled
+        setAudioEnabled(true);
+      });
+    } else {
+      setAudioEnabled(true);
+    }
+  };
 
   useEffect(() => {
     // Generate a simple unique id for this client.
@@ -31,7 +46,7 @@ function App() {
         const data = JSON.parse(evt.data);
         if (data.event === 'unlocked' && data.id === id) {
           setUnlocked(true);
-          if (unlockedAudioRef.current) {
+          if (unlockedAudioRef.current && audioEnabled) {
             try {
               unlockedAudioRef.current.play();
             } catch (e) {
@@ -52,6 +67,9 @@ function App() {
 
   return (
     <div className={`App ${unlocked ? 'unlocked' : ''}`}>
+      {!audioEnabled && (
+        <button onClick={enableAudio} className="enable-audio">Enable Audio</button>
+      )}
       <div>
       <FontAwesomeIcon
         icon={unlocked ? faLockOpen : faLock}

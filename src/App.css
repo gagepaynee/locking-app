@@ -16,3 +16,11 @@
   color: white;
   font-size: 10rem;
 }
+
+.enable-audio {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
