@@ -1,6 +1,21 @@
 import { render, screen, act } from '@testing-library/react';
 import App from './App';
 
+let origWebSocket;
+
+beforeEach(() => {
+  origWebSocket = global.WebSocket;
+  global.WebSocket = jest.fn(() => ({
+    addEventListener: jest.fn(),
+    send: jest.fn(),
+    close: jest.fn(),
+  }));
+});
+
+afterEach(() => {
+  global.WebSocket = origWebSocket;
+});
+
 test('renders lock icon', () => {
   render(<App />);
   const icon = screen.getByLabelText('locked');

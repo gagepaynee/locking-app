@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
+import unlockedSound from '../media/unlocked.wav';
 
 /**
  * Connects to a WebSocket server and registers this client. When an
@@ -11,6 +12,7 @@ import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
 function App() {
   const [clientId, setClientId] = useState('');
   const [unlocked, setUnlocked] = useState(false);
+  const unlockedAudioRef = useRef(new Audio(unlockedSound));
 
   useEffect(() => {
     // Generate a simple unique id for this client.
@@ -29,6 +31,13 @@ function App() {
         const data = JSON.parse(evt.data);
         if (data.event === 'unlocked' && data.id === id) {
           setUnlocked(true);
+          if (unlockedAudioRef.current) {
+            try {
+              unlockedAudioRef.current.play();
+            } catch (e) {
+              // ignore playback errors in unsupported environments
+            }
+          }
         }
       } catch (err) {
         // eslint-disable-next-line no-console
