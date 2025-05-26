@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
-import unlockedSound from '../media/unlocked.wav';
+import unlockedSound from './media/unlocked.wav';
 
 /**
  * Connects to a WebSocket server and registers this client. When an
@@ -48,6 +48,7 @@ function App() {
           setUnlocked(true);
           if (unlockedAudioRef.current && audioEnabled) {
             try {
+              console.log('made it');
               unlockedAudioRef.current.play();
             } catch (e) {
               // ignore playback errors in unsupported environments
@@ -63,7 +64,7 @@ function App() {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [audioEnabled]);
 
   return (
     <div className={`App ${unlocked ? 'unlocked' : ''}`}>
