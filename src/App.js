@@ -11,11 +11,14 @@ import unlockedSound from './media/unlocked.wav';
  */
 function App() {
   const [clientId, setClientId] = useState('');
+  const [registered, setRegistered] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const unlockedAudioRef = useRef(new Audio(unlockedSound));
   // Track the latest value of audioEnabled for the WebSocket callback
   const audioEnabledRef = useRef(audioEnabled);
+  const socketRef = useRef(null);
+  const idRef = useRef('');
 
   const enableAudio = () => {
     if (unlockedAudioRef.current) {
@@ -31,31 +34,26 @@ function App() {
     }
   };
 
-  // Keep the ref in sync with the latest audioEnabled state
+  // Keep the refs in sync with the latest state values
   useEffect(() => {
     audioEnabledRef.current = audioEnabled;
   }, [audioEnabled]);
 
   useEffect(() => {
-    // Generate a simple unique id for this client.
-    const id = Math.random().toString(36).substring(2, 10);
-    setClientId(id);
+    idRef.current = clientId;
+  }, [clientId]);
 
+  useEffect(() => {
     const socket = new WebSocket(`wss://${process.env.REACT_APP_IP_ADDRESS}:${process.env.REACT_APP_SERVER_PORT}`);
-
-    socket.addEventListener('open', () => {
-      // Send register event to the server with the generated id
-      socket.send(JSON.stringify({ event: 'register', id }));
-    });
+    socketRef.current = socket;
 
     socket.addEventListener('message', (evt) => {
       try {
         const data = JSON.parse(evt.data);
-        if (data.event === 'unlocked' && data.id === id) {
+        if (data.event === 'unlocked' && data.id === idRef.current) {
           setUnlocked(true);
           if (unlockedAudioRef.current && audioEnabledRef.current) {
             try {
-              console.log('made it');
               unlockedAudioRef.current.play();
             } catch (e) {
               // ignore playback errors in unsupported environments
@@ -73,23 +71,50 @@ function App() {
     };
   }, []);
 
+  const registerLock = () => {
+    if (!clientId || !socketRef.current) {
+      return;
+    }
+    const socket = socketRef.current;
+    const sendRegistration = () => {
+      socket.send(JSON.stringify({ event: 'register', id: clientId }));
+      setRegistered(true);
+    };
+    if (socket.readyState === WebSocket.OPEN) {
+      sendRegistration();
+    } else {
+      socket.addEventListener('open', sendRegistration, { once: true });
+    }
+  };
+
   return (
-    <div className={`App ${unlocked ? 'unlocked' : ''}`}>
+    <div className={`App ${registered ? 'registered' : ''} ${unlocked ? 'unlocked' : ''}`}>
       {!audioEnabled && (
         <button onClick={enableAudio} className="enable-audio">Enable Audio</button>
       )}
-      <div>
-      <FontAwesomeIcon
-        icon={unlocked ? faLockOpen : faLock}
-        size='9x'
-        inverse
-        aria-label={unlocked ? 'unlocked' : 'locked'}
-      />
-      <header className="App-header">
-        <p>Client ID: {clientId}</p>
-      </header>
-      </div>
-
+      {!registered ? (
+        <div className="register-form">
+          <input
+            type="text"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            placeholder="Event ID"
+          />
+          <button onClick={registerLock}>Lock</button>
+        </div>
+      ) : (
+        <div>
+          <FontAwesomeIcon
+            icon={unlocked ? faLockOpen : faLock}
+            size='9x'
+            inverse
+            aria-label={unlocked ? 'unlocked' : 'locked'}
+          />
+          <header className="App-header">
+            <p>Client ID: {clientId}</p>
+          </header>
+        </div>
+      )}
     </div>
   );
 }

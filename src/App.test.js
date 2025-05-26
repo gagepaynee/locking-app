@@ -12,7 +12,9 @@ beforeEach(() => {
     addEventListener: jest.fn(),
     send: jest.fn(),
     close: jest.fn(),
+    readyState: 1,
   }));
+  global.WebSocket.OPEN = 1;
   playSpy = jest.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
   pauseSpy = jest.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
@@ -23,74 +25,58 @@ afterEach(() => {
   pauseSpy.mockRestore();
 });
 
-test('renders lock icon', () => {
+test('shows registration form initially', () => {
   render(<App />);
-  const icon = screen.getByLabelText('locked');
-  expect(icon).toBeInTheDocument();
-  const idElement = screen.getByText(/Client ID:/i);
-  expect(idElement).toBeInTheDocument();
-});
-test('shows generated client id', () => {
-  render(<App />);
-  const idElement = screen.getByText(/Client ID:/i);
-  expect(idElement).toBeInTheDocument();
+  expect(screen.getByPlaceholderText(/event id/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /lock/i })).toBeInTheDocument();
+  expect(screen.queryByLabelText('locked')).toBeNull();
 });
 
-test('switches to unlocked icon and background on event', () => {
-  const listeners = {};
-  let sent;
-  const mockSocket = {
-    addEventListener: (event, cb) => {
-      listeners[event] = cb;
-    },
-    send: jest.fn((arg) => { sent = arg; }),
-    close: jest.fn(),
-  };
-  const origWebSocket = global.WebSocket;
+test('registers when lock button clicked', async () => {
+  const mockSocket = { addEventListener: jest.fn(), send: jest.fn(), close: jest.fn(), readyState: 1 };
   global.WebSocket = jest.fn(() => mockSocket);
+  global.WebSocket.OPEN = 1;
+  render(<App />);
+  await userEvent.type(screen.getByPlaceholderText(/event id/i), 'abc');
+  await userEvent.click(screen.getByRole('button', { name: /lock/i }));
+  expect(mockSocket.send).toHaveBeenCalledTimes(1);
+  const sent = JSON.parse(mockSocket.send.mock.calls[0][0]);
+  expect(sent).toEqual({ event: 'register', id: 'abc' });
+  expect(screen.getByLabelText('locked')).toBeInTheDocument();
+});
+
+test('switches to unlocked icon and background on event', async () => {
+  const listeners = {};
+  const mockSocket = {
+    addEventListener: (event, cb) => { listeners[event] = cb; },
+    send: jest.fn(),
+    close: jest.fn(),
+    readyState: 1,
+  };
+  global.WebSocket = jest.fn(() => mockSocket);
+  global.WebSocket.OPEN = 1;
 
   render(<App />);
-
+  act(() => { listeners['open'] && listeners['open'](); });
+  await userEvent.type(screen.getByPlaceholderText(/event id/i), 'abc');
+  await userEvent.click(screen.getByRole('button', { name: /lock/i }));
   act(() => {
-    listeners['open'] && listeners['open']();
+    listeners['message']({ data: JSON.stringify({ event: 'unlocked', id: 'abc' }) });
   });
-  const regData = JSON.parse(sent);
-
-  act(() => {
-    listeners['message']({ data: JSON.stringify({ event: 'unlocked', id: regData.id }) });
-  });
-
   const icon = screen.getByLabelText('unlocked');
   expect(icon).toBeInTheDocument();
   const app = document.querySelector('.App.unlocked');
   expect(app).not.toBeNull();
-
-  global.WebSocket = origWebSocket;
 });
 
 test('enabling audio does not re-register with the server', async () => {
-  const listeners = {};
-  const mockSocket = {
-    addEventListener: (event, cb) => {
-      listeners[event] = cb;
-    },
-    send: jest.fn(),
-    close: jest.fn(),
-  };
-  const origWebSocket = global.WebSocket;
+  const mockSocket = { addEventListener: jest.fn(), send: jest.fn(), close: jest.fn(), readyState: 1 };
   global.WebSocket = jest.fn(() => mockSocket);
-
+  global.WebSocket.OPEN = 1;
   render(<App />);
-
-  act(() => {
-    listeners['open'] && listeners['open']();
-  });
-
+  await userEvent.type(screen.getByPlaceholderText(/event id/i), 'abc');
+  await userEvent.click(screen.getByRole('button', { name: /lock/i }));
   expect(mockSocket.send).toHaveBeenCalledTimes(1);
-
   await userEvent.click(screen.getByRole('button', { name: /enable audio/i }));
-
   expect(mockSocket.send).toHaveBeenCalledTimes(1);
-
-  global.WebSocket = origWebSocket;
 });
